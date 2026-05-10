@@ -1,0 +1,57 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_mingw'
+          modules: 'qtspeech'
+
+      - name: Setup CMake
+        uses: jasonjs6/setup-cmake@v1
+
+      - name: Configure and Build
+        run: |
+          mkdir build
+          cd build
+          cmake -G "MinGW Makefiles" ..
+          cmake --build .
+
+      - name: Package with windeployqt
+        run: |
+          cd build
+          windeployqt --cpp vn_app.exe
+          mkdir dist
+          copy vn_app.exe dist\
+          xcopy /E /I ..\assets dist\assets
+          move *.dll dist\
+          if exist platforms move platforms dist\
+          if exist styles move styles dist\
+          if exist translations move translations dist\
+          if exist generic move generic dist\
+          if exist iconengines move generic dist\
+          if exist imageformats move generic dist\
+          if exist networkinformation move generic dist\
+          if exist tls move generic dist\
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Visual-Novel-Windows
+          path: build/dist/
