@@ -22,31 +22,41 @@ jobs:
           target: 'desktop'
           arch: 'win64_mingw'
           modules: 'qtspeech'
+          setup-python: 'false'
+
+      - name: Install Ninja
+        run: choco install ninja
 
       - name: Configure and Build
+        shell: pwsh
         run: |
           mkdir build
           cd build
-          cmake -G "MinGW Makefiles" ..
+          cmake -G "Ninja" .. -DCMAKE_BUILD_TYPE=Release
           cmake --build .
 
       - name: Package with windeployqt
         shell: pwsh
         run: |
+          $qt_bin = "$env:Qt6_DIR/bin"
           cd build
-          windeployqt --cpp vn_app.exe
-          mkdir dist
-          copy vn_app.exe dist\
+          & "$qt_bin/windeployqt.exe" --cpp vn_app.exe --dir dist
+          
+          # Copiar o executável para a pasta final
+          copy vn_app.exe dist/
+          
+          # Garantir que a pasta assets vá junto
           if (Test-Path "../assets") {
             xcopy /E /I ../assets dist/assets
           }
-          # Move DLLs if they exist in the root of build
-          Get-ChildItem *.dll | ForEach-Object { Copy-Item $_.FullName dist/ }
-          if (Test-Path "platforms") { xcopy /E /I platforms dist/platforms }
-          if (Test-Path "styles") { xcopy /E /I styles dist/styles }
-          if (Test-Path "translations") { xcopy /E /I translations dist/translations }
-          if (Test-Path "generic") { xcopy /E /I generic dist/generic }
-          if (Test-Path "imageformats") { xcopy /E /I imageformats dist/imageformats }
+          
+          # Verificar se as DLLs de runtime do MinGW são necessárias
+          # O windeployqt geralmente não copia o libgcc/libstdc++, mas o install-qt-action coloca no PATH
+          # Vamos tentar copiar as essenciais se encontrarmos no PATH
+          $mingw_bin = (Get-Command g++.exe).Source | Split-Path
+          copy "$mingw_bin/libgcc_s_seh-1.dll" dist/ -ErrorAction SilentlyContinue
+          copy "$mingw_bin/libstdc++-6.dll" dist/ -ErrorAction SilentlyContinue
+          copy "$mingw_bin/libwinpthread-1.dll" dist/ -ErrorAction SilentlyContinue
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
