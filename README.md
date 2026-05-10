@@ -1,6 +1,6 @@
-# 🌸 Clube de Literatura - Visual Novel C++/Qt6
+# 🌸 Visual Novel C++/Qt6
 
-Uma Visual Novel inspirada na estética de *Doki Doki Literature Club*, focada em **acessibilidade total** e escrita em C++17 com o framework Qt6.
+Uma Visual Novel moderna focada em **acessibilidade total**, escrita em C++17 com o framework Qt6.
 
 ## 🚀 Funcionalidades
 - **História Interativa:** Sistema de cenas e escolhas com múltiplos finais.
@@ -14,25 +14,26 @@ Uma Visual Novel inspirada na estética de *Doki Doki Literature Club*, focada e
   - Modo Leitura (foco no texto centralizado).
   - Atalhos de teclado (1-9).
 
-## 🛠️ Como Compilar (Linux)
+## 🛠️ Como Instalar Dependências
 
-Este projeto usa o **Nix** para gerenciar dependências sem poluir o sistema.
+### Usando o Script Automático (Ubuntu, Arch, Fedora, OpenSUSE)
+Se você não usa Nix, pode rodar o script que eu criei para instalar tudo o que o jogo precisa:
+```bash
+chmod +x install_deps.sh
+./install_deps.sh
+```
 
-1. Entre no ambiente:
-   ```bash
-   nix-shell
-   ```
-2. Compile o projeto:
-   ```bash
-   cmake . && make
-   ```
-3. Rode o jogo:
-   ```bash
-   ./vn_app
-   ```
+### Usando Nix (Recomendado)
+Se você tem o Nix instalado:
+1. Entre no ambiente: `nix-shell`
+
+## 🔨 Como Compilar e Rodar
+Depois de ter as dependências instaladas:
+1. Compile o projeto: `cmake . && make`
+2. Rode o jogo: `./vn_app`
 
 ## 🪟 Versão Windows
-O código é 100% compatível com Windows via Qt6 + MinGW. O repositório inclui scripts para facilitar a compilação em máquinas Windows.
+O código é 100% compatível com Windows via Qt6 + MinGW. O repositório inclui scripts na pasta de Windows para facilitar a compilação.
 
 ---
 *Feito com ❤️ por Kim.*
