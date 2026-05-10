@@ -23,9 +23,6 @@ jobs:
           arch: 'win64_mingw'
           modules: 'qtspeech'
 
-      - name: Setup CMake
-        uses: jasonjs6/setup-cmake@v1
-
       - name: Configure and Build
         run: |
           mkdir build
@@ -34,21 +31,22 @@ jobs:
           cmake --build .
 
       - name: Package with windeployqt
+        shell: pwsh
         run: |
           cd build
           windeployqt --cpp vn_app.exe
           mkdir dist
           copy vn_app.exe dist\
-          xcopy /E /I ..\assets dist\assets
-          move *.dll dist\
-          if exist platforms move platforms dist\
-          if exist styles move styles dist\
-          if exist translations move translations dist\
-          if exist generic move generic dist\
-          if exist iconengines move generic dist\
-          if exist imageformats move generic dist\
-          if exist networkinformation move generic dist\
-          if exist tls move generic dist\
+          if (Test-Path "../assets") {
+            xcopy /E /I ../assets dist/assets
+          }
+          # Move DLLs if they exist in the root of build
+          Get-ChildItem *.dll | ForEach-Object { Copy-Item $_.FullName dist/ }
+          if (Test-Path "platforms") { xcopy /E /I platforms dist/platforms }
+          if (Test-Path "styles") { xcopy /E /I styles dist/styles }
+          if (Test-Path "translations") { xcopy /E /I translations dist/translations }
+          if (Test-Path "generic") { xcopy /E /I generic dist/generic }
+          if (Test-Path "imageformats") { xcopy /E /I imageformats dist/imageformats }
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
