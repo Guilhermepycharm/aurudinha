@@ -38,25 +38,27 @@ jobs:
       - name: Package with windeployqt
         shell: pwsh
         run: |
-          $qt_bin = "$env:Qt6_DIR/bin"
           cd build
-          & "$qt_bin/windeployqt.exe" --cpp vn_app.exe --dir dist
+          # Criar pasta dist primeiro para evitar erro de diretório inválido
+          New-Item -ItemType Directory -Force -Path dist
           
-          # Copiar o executável para a pasta final
-          copy vn_app.exe dist/
+          # Rodar windeployqt sem a opção inválida --cpp
+          # Ele vai copiar as DLLs do Qt para a pasta dist
+          windeployqt --dir dist --no-translations --no-opengl-sw vn_app.exe
           
-          # Garantir que a pasta assets vá junto
+          # Copiar o executável principal
+          Copy-Item vn_app.exe -Destination dist\
+          
+          # Copiar a pasta de assets (imagens)
           if (Test-Path "../assets") {
-            xcopy /E /I ../assets dist/assets
+            xcopy /E /I /Y "..\assets" "dist\assets"
           }
           
-          # Verificar se as DLLs de runtime do MinGW são necessárias
-          # O windeployqt geralmente não copia o libgcc/libstdc++, mas o install-qt-action coloca no PATH
-          # Vamos tentar copiar as essenciais se encontrarmos no PATH
+          # Tentar pegar as DLLs do compilador que o windeployqt às vezes esquece
           $mingw_bin = (Get-Command g++.exe).Source | Split-Path
-          copy "$mingw_bin/libgcc_s_seh-1.dll" dist/ -ErrorAction SilentlyContinue
-          copy "$mingw_bin/libstdc++-6.dll" dist/ -ErrorAction SilentlyContinue
-          copy "$mingw_bin/libwinpthread-1.dll" dist/ -ErrorAction SilentlyContinue
+          Copy-Item "$mingw_bin\libgcc_s_seh-1.dll" -Destination dist\ -ErrorAction SilentlyContinue
+          Copy-Item "$mingw_bin\libstdc++-6.dll" -Destination dist\ -ErrorAction SilentlyContinue
+          Copy-Item "$mingw_bin\libwinpthread-1.dll" -Destination dist\ -ErrorAction SilentlyContinue
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
