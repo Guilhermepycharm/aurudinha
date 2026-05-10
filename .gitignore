@@ -1,0 +1,17 @@
+# Binários e Build
+vn_app
+vn_app.exe
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.o
+*.a
+*.so
+.qt/
+
+# Configurações locais
+a11y_prefs.json
+.vscode/
+.idea/
