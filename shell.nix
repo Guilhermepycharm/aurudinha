@@ -17,12 +17,10 @@ pkgs.mkShell {
 
   shellHook = ''
     export QT_QPA_PLATFORM=wayland
-    # Configura o caminho dos plugins do Qt para encontrar o plugin de voz (speechd)
     export QT_PLUGIN_PATH="${pkgs.qt6.qtspeech}/lib/qt-6/plugins:${pkgs.qt6.qtbase}/lib/qt-6/plugins"
     export LD_LIBRARY_PATH="${pkgs.qt6.qtbase}/lib:${pkgs.espeak-ng}/lib:${pkgs.pipewire}/lib:$LD_LIBRARY_PATH"
-    
-    echo "✦ Ambiente C++/Qt6 atualizado com Áudio e Voz! ✦"
-    echo "1. Saia e entre no nix-shell novamente."
-    echo "2. Execute: cmake . && make && ./vn_app"
+    echo "✦ Ambiente Aurudinha atualizado com Voz e Áudio! ✦"
+    echo "Para compilar: cmake . && make"
+    echo "Para rodar: ./aurudinha_game"
   '';
 }

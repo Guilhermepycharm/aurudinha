@@ -1,49 +1,56 @@
-# 🌸 Visual Novel C++/Qt6
+# Aurudinha - Visual Novel Acessível
 
-Uma Visual Novel moderna focada em **acessibilidade total**, escrita em C++17 com o framework Qt6.
+Este é um projeto de Visual Novel desenvolvido em **C++17** e **Qt6**, focado em acessibilidade e narrativa imersiva. O jogo conta a história de Aurudinha, explorando temas de neurodivergência e suporte familiar.
 
-## 🚀 Funcionalidades
-- **História Interativa:** Sistema de cenas e escolhas com múltiplos finais.
-- **Narrador Inteligente (TTS):** Narração em Português do Brasil que se ajusta ao ritmo do jogador.
-- **Visual Sakura:** Efeito de pétalas caindo com performance nativa.
-- **Acessibilidade Completa:**
-  - Menu em tela cheia.
-  - Modos para Daltonismo (Deuteranopia, Protanopia, Tritanopia).
-  - Modo de Alto Contraste.
-  - Escala de fonte dinâmica (80% a 160%).
-  - Modo Leitura (foco no texto centralizado).
-  - Atalhos de teclado (1-9).
+## 🚀 Funcionalidades de Acessibilidade
 
-## 🛠️ Como Instalar as Dependências
+- **Narrador (TTS):** Suporte total a Text-to-Speech em Português (pt-BR).
+- **Modo Daltônico:** Filtros em tempo real para Deuteranopia, Protanopia e Tritanopia que afetam toda a tela.
+- **Alto Contraste:** Interface adaptada para melhor legibilidade.
+- **Escala de Fonte:** Ajuste dinâmico do tamanho do texto (80% a 160%).
+- **Modo Leitura:** Foca o texto no centro da tela para reduzir distrações.
+- **Atalhos de Teclado:** Navegação completa pelos números 1-9 para escolhas.
+- **Layout Responsivo:** Ajusta-se automaticamente a qualquer resolução (Full HD, 4K, etc).
 
-### 1. Script Automático (Mais fácil)
-Se você estiver no **Ubuntu, Arch, Fedora ou OpenSUSE**, basta rodar o comando abaixo para instalar o Qt6 e o CMake automaticamente:
+## 🛠️ Como Compilar
 
-```bash
-chmod +x install_deps.sh
-./install_deps.sh
-```
+### No Linux (recomendado com Nix)
 
-### 2. Usando Nix (Para quem quer ambiente isolado)
-Se você tem o Nix instalado, não precisa rodar o script acima:
+Se você tem o **Nix** instalado, basta entrar no ambiente:
+
 ```bash
 nix-shell
+cmake .
+make
+./aurudinha_game
 ```
 
-## 🔨 Como Compilar e Jogar
-Após instalar as dependências com um dos métodos acima, rode:
+### No Linux (Manual)
 
-1. **Configurar e Compilar:**
-   ```bash
-   cmake . && make
-   ```
-2. **Abrir o Jogo:**
-   ```bash
-   ./vn_app
-   ```
+Você precisará do **Qt6 (Widgets, TextToSpeech)** e **CMake**:
 
-## 🪟 Versão Windows
-O código é 100% compatível com Windows. Para compilar na VM de Windows, use o Qt6 (MinGW) e o script `.bat` incluído na pasta de porte para Windows.
+```bash
+cmake .
+make
+./aurudinha_game
+```
+
+### No Windows
+
+O projeto utiliza **GitHub Actions** para gerar binários automaticamente. Você pode baixar a versão mais recente na aba **Actions** ou **Releases** deste repositório.
+
+Para compilar manualmente no Windows:
+1. Instale o Qt 6.5+ (MinGW).
+2. Use o CMake para gerar o projeto.
+3. Utilize `windeployqt` para incluir as DLLs necessárias na pasta do executável.
+
+## 📁 Estrutura de Arquivos
+
+- `game.cpp`: Código-fonte principal em C++.
+- `assets/`: Sprites e cenários do jogo.
+- ` roteiro`: Script original da história.
+- `CMakeLists.txt`: Configuração de build.
+- `shell.nix`: Ambiente de desenvolvimento isolado.
 
 ---
-*Feito com ❤️ por Kim.*
+Desenvolvido com ❤️ para promover a inclusão.

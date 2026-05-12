@@ -44,10 +44,10 @@ jobs:
           
           # Rodar windeployqt sem a opção inválida --cpp
           # Ele vai copiar as DLLs do Qt para a pasta dist
-          windeployqt --dir dist --no-translations --no-opengl-sw vn_app.exe
+          windeployqt --dir dist --no-translations --no-opengl-sw aurudinha_game.exe
           
           # Copiar o executável principal
-          Copy-Item vn_app.exe -Destination dist\
+          Copy-Item aurudinha_game.exe -Destination dist\
           
           # Copiar a pasta de assets (imagens)
           if (Test-Path "../assets") {
