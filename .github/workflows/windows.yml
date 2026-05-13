@@ -8,35 +8,41 @@ on:
 
 jobs:
   windows:
-    name: Windows Qt build
+    name: Windows MinGW Qt build
     runs-on: windows-latest
+
+    defaults:
+      run:
+        shell: msys2 {0}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Qt
+      - name: Install MSYS2 and Qt
         shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 --outputdir C:\Qt -m qtspeech
-          "C:\Qt\6.7.3\msvc2019_64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          "Qt6_DIR=C:\Qt\6.7.3\msvc2019_64\lib\cmake\Qt6" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          choco install msys2 --no-progress -y
+          C:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syuu"
+          C:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -S --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-qt6-base mingw-w64-x86_64-qt6-speech"
 
       - name: Configure CMake
-        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+        run: |
+          export PATH=/mingw64/bin:$PATH
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        run: cmake --build build --config Release
+        run: |
+          export PATH=/mingw64/bin:$PATH
+          cmake --build build --config Release
 
       - name: Deploy Qt runtime
-        shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path dist
-          Copy-Item build\Release\aurudinha_game.exe dist\
-          windeployqt --release --dir dist dist\aurudinha_game.exe
-          if (Test-Path assets) { Copy-Item assets dist\assets -Recurse }
+          export PATH=/mingw64/bin:$PATH
+          mkdir -p dist
+          cp build/aurudinha_game.exe dist/
+          windeployqt --release --dir dist dist/aurudinha_game.exe
+          if [ -d assets ]; then cp -r assets dist/assets; fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
