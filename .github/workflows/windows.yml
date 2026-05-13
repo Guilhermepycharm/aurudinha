@@ -1,24 +1,46 @@
-name: Build Windows Executable
+name: Build Windows
 
-on: [push]
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
 
 jobs:
-  build:
+  windows:
+    name: Windows Qt build
     runs-on: windows-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.7.3'
+          host: windows
+          target: desktop
+          arch: win64_msvc2019_64
+          modules: qttexttospeech
+          cache: true
+
+      - name: Configure CMake
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+
       - name: Build
+        run: cmake --build build --config Release
+
+      - name: Deploy Qt runtime
         shell: pwsh
         run: |
-          # Instalação simplificada via CMake/vcpkg (nativo do GitHub)
-          mkdir build
-          cd build
-          cmake -G "Ninja" ..
-          cmake --build .
-          windeployqt --dir dist aurudinha_game.exe
-          Copy-Item aurudinha_game.exe -Destination dist\
-          if (Test-Path "../assets") { Copy-Item -Recurse "../assets" -Destination "dist\assets" }
-      - uses: actions/upload-artifact@v4
+          New-Item -ItemType Directory -Force -Path dist
+          Copy-Item build\Release\aurudinha_game.exe dist\
+          windeployqt --release --dir dist dist\aurudinha_game.exe
+          if (Test-Path assets) { Copy-Item assets dist\assets -Recurse }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
         with:
-          name: Aurudinha-Windows
-          path: build/dist/
+          name: aurudinha-windows
+          path: dist

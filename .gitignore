@@ -1,17 +1,27 @@
-# Binários e Build
+# Binários e build
 vn_app
 vn_app.exe
-build/
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
+/aurudinha_game
+/aurudinha_game_autogen/
+/build*/
+/CMakeFiles/
+/CMakeCache.txt
+/Makefile
+/cmake_install.cmake
+/.qt/
 *.o
 *.a
 *.so
-.qt/
 
 # Configurações locais
 a11y_prefs.json
 .vscode/
 .idea/
+
+# Sistema/temp
+.DS_Store
+*.tmp
+
+# Arquivos gerados/pesados
+*.zip
+Screenshot*.png
