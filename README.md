@@ -37,7 +37,16 @@ make
 
 ### No Windows
 
-O projeto utiliza **GitHub Actions** para gerar binários automaticamente. Você pode baixar a versão mais recente na aba **Actions** ou **Releases** deste repositório.
+Você pode baixar o pacote pronto para Windows diretamente neste repositório:
+
+- [`aurudinha-windows.zip`](aurudinha-windows.zip)
+
+Depois de baixar:
+1. Extraia o arquivo `.zip`.
+2. Abra a pasta extraída.
+3. Execute `aurudinha_game.exe`.
+
+O projeto também utiliza **GitHub Actions** para tentar gerar binários automaticamente. Você pode acompanhar as builds na aba **Actions** deste repositório.
 
 Para compilar manualmente no Windows:
 1. Instale o Qt 6.5+ (MinGW).
