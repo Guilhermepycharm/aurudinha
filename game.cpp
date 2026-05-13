@@ -9,9 +9,9 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QSlider>
+#ifndef __EMSCRIPTEN__
 #include <QTextToSpeech>
-#include <QVoice>
-#include <QLocale>
+#endif
 #include <QPixmap>
 #include <QPalette>
 #include <QDir>
@@ -32,9 +32,7 @@ const QString ROSA = "#FFB7C5";
 const QString CREME = "#FFF0F5";
 const QString LILAS = "#C9A0DC";
 const QString TEXTO_ESCURO = "#3D2B3D";
-const QString ROSA_BORDA = "#ffccd5";
 const QString BRANCO = "#FFFFFF";
-
 const QString HC_BG = "#000000";
 const QString HC_PANEL = "#1a1a1a";
 const QString HC_ACCENT = "#FFD700";
@@ -81,20 +79,10 @@ struct Prefs {
     }
 };
 
-struct Choice {
-    QString text;
-    QString nextScene;
-};
+struct Choice { QString text; QString nextScene; };
+struct Scene { QString text; QString background; QString centerSprite; QString leftSprite; QString rightSprite; std::vector<Choice> choices; };
 
-struct Scene {
-    QString text;
-    QString background;
-    QString centerSprite;
-    QString leftSprite;
-    QString rightSprite;
-    std::vector<Choice> choices;
-};
-
+// --- Efeito das Pétalas ---
 struct Petal {
     float x, y, size, speed, drift;
     void reset(int w, int h) {
@@ -110,10 +98,7 @@ class PetalCanvas : public QWidget {
 public:
     PetalCanvas(QWidget *parent) : QWidget(parent) {
         setAttribute(Qt::WA_TransparentForMouseEvents);
-        for(int i=0; i<30; ++i) {
-            Petal p; p.reset(1920, 1080);
-            petals.push_back(p);
-        }
+        for(int i=0; i<30; ++i) { Petal p; p.reset(1920, 1080); petals.push_back(p); }
         timer = new QTimer(this);
         connect(timer, &QTimer::timeout, this, &PetalCanvas::updateAnimation);
     }
@@ -125,56 +110,45 @@ protected:
             QPainter painter(this);
             painter.setRenderHint(QPainter::Antialiasing);
             painter.setBrush(Qt::white);
-            painter.setPen(QPen(QColor(ROSA_BORDA), 1));
+            painter.setPen(QPen(QColor(ROSA), 1));
             for(auto &p : petals) { painter.drawEllipse(p.x, p.y, p.size, p.size); }
         }
     }
     void updateAnimation() {
-        for(auto &p : petals) {
-            p.y += p.speed; p.x += p.drift;
-            if (p.y > height()) p.reset(width(), height());
-        }
+        for(auto &p : petals) { p.y += p.speed; p.x += p.drift; if (p.y > height()) p.reset(width(), height()); }
         update();
     }
 private:
-    std::vector<Petal> petals;
-    QTimer *timer;
+    std::vector<Petal> petals; QTimer *timer;
 };
 
+// --- Menu Acessibilidade ---
 class AccessibilityMenu : public QDialog {
 public:
     AccessibilityMenu(QWidget *parent, Prefs &currentPrefs, std::function<void(const Prefs&)> onApply) 
         : QDialog(parent), prefs(currentPrefs), applyCallback(onApply) {
-        setModal(true);
-        setStyleSheet(QString("background-color: %1;").arg(ROSA));
-        petalCanvas = new PetalCanvas(this);
-        petalCanvas->lower();
-        auto *mainLayout = new QVBoxLayout(this);
-        mainLayout->setContentsMargins(50, 50, 50, 50);
+        setModal(true); setStyleSheet(QString("background-color: %1;").arg(ROSA));
+        petalCanvas = new PetalCanvas(this); petalCanvas->lower();
+        auto *mainLayout = new QVBoxLayout(this); mainLayout->setContentsMargins(50, 50, 50, 50);
         auto *header = new QLabel("✦ CONFIGURAÇÕES ✦", this);
         header->setAlignment(Qt::AlignCenter);
         header->setStyleSheet(QString("font: bold 35pt 'Helvetica'; color: %1; background: transparent;").arg(TEXTO_ESCURO));
         mainLayout->addWidget(header);
-        auto *scroll = new QScrollArea(this);
-        scroll->setWidgetResizable(true);
-        scroll->setFrameShape(QFrame::NoFrame);
-        scroll->setStyleSheet("QScrollArea { background-color: transparent; }");
-        auto *scrollContent = new QFrame();
-        scrollContent->setObjectName("scrollContent");
-        scrollContent->setStyleSheet(QString("QFrame#scrollContent { background-color: %1; border: 4px solid %2; border-radius: 20px; }").arg(CREME).arg(ROSA_BORDA));
-        auto *scrollLayout = new QVBoxLayout(scrollContent);
-        scrollLayout->setContentsMargins(30, 30, 30, 30);
+        auto *scroll = new QScrollArea(this); scroll->setWidgetResizable(true); scroll->setFrameShape(QFrame::NoFrame); scroll->setStyleSheet("QScrollArea { background-color: transparent; }");
+        auto *scrollContent = new QFrame(); scrollContent->setObjectName("scrollContent");
+        scrollContent->setStyleSheet(QString("QFrame#scrollContent { background-color: %1; border: 4px solid #C9A0DC; border-radius: 20px; }").arg(CREME));
+        auto *scrollLayout = new QVBoxLayout(scrollContent); scrollLayout->setContentsMargins(30, 30, 30, 30);
         addToggle(scrollLayout, "📖 Modo Leitura", "Foca o texto no centro.", &prefs.reading_mode);
         addColorblindSelect(scrollLayout);
         addToggle(scrollLayout, "🚫 Reduzir Movimento", "Para as pétalas.", &prefs.reduce_motion);
         addToggle(scrollLayout, "◑ Alto Contraste", "Cores vibrantes.", &prefs.high_contrast);
         addSlider(scrollLayout, "🔤 Tamanho do Texto", &prefs.font_scale);
         addToggle(scrollLayout, "🖱 Cursor Personalizado", "Aumenta o mouse.", &prefs.custom_cursor);
+#ifndef __EMSCRIPTEN__
         addToggle(scrollLayout, "🔊 Falar Texto", "Narrador PT-BR.", &prefs.text_to_speech);
-        scroll->setWidget(scrollContent);
-        mainLayout->addWidget(scroll);
-        auto *btnClose = new QPushButton("✅ Sair e Salvar", this);
-        btnClose->setMinimumHeight(60);
+#endif
+        scroll->setWidget(scrollContent); mainLayout->addWidget(scroll);
+        auto *btnClose = new QPushButton("✅ Sair e Salvar", this); btnClose->setMinimumHeight(60);
         btnClose->setStyleSheet(QString("QPushButton { background-color: %1; color: white; font: bold 18pt; border-radius: 15px; }").arg(LILAS));
         connect(btnClose, &QPushButton::clicked, this, &QDialog::accept);
         mainLayout->addWidget(btnClose);
@@ -190,7 +164,7 @@ private:
         auto *lTitle = new QLabel(QString("<b>%1</b><br>%2").arg(title).arg(desc));
         lTitle->setStyleSheet(QString("font-size: 16pt; color: %1; background: transparent;").arg(TEXTO_ESCURO));
         auto *cb = new QCheckBox(); cb->setChecked(*val); cb->setFixedSize(40, 40);
-        cb->setStyleSheet("QCheckBox::indicator { width: 30px; height: 30px; border: 2px solid #C9A0DC; border-radius: 5px; } QCheckBox::indicator:checked { background-color: #C9A0DC; }");
+        cb->setStyleSheet("QCheckBox::indicator { width: 35px; height: 35px; border: 3px solid #C9A0DC; border-radius: 8px; } QCheckBox::indicator:checked { background-color: #C9A0DC; }");
         connect(cb, &QCheckBox::toggled, this, [=](bool checked){ *val = checked; applyCallback(prefs); });
         rowLayout->addWidget(lTitle, 1); rowLayout->addWidget(cb); layout->addWidget(row);
     }
@@ -201,7 +175,7 @@ private:
         auto *combo = new QComboBox(); combo->addItems({"Nenhum", "Deuteranopia", "Protanopia", "Tritanopia"});
         std::map<QString, QString> m = {{"Nenhum", "none"}, {"Deuteranopia", "deuteranopia"}, {"Protanopia", "protanopia"}, {"Tritanopia", "tritanopia"}};
         std::map<QString, QString> im; for(auto const& [k, v] : m) im[v] = k;
-        combo->setCurrentText(im[prefs.colorblind]); combo->setStyleSheet("QComboBox { border: 2px solid #C9A0DC; border-radius: 5px; padding: 5px; font-size: 12pt; color: black; background: white; }");
+        combo->setCurrentText(im[prefs.colorblind]); combo->setStyleSheet("QComboBox { border: 2px solid #C9A0DC; border-radius: 5px; padding: 5px; font-size: 14pt; }");
         connect(combo, &QComboBox::currentTextChanged, this, [=, m=m](QString t){ prefs.colorblind = m.at(t); applyCallback(prefs); });
         rowLayout->addWidget(lTitle, 1); rowLayout->addWidget(combo); layout->addWidget(row);
     }
@@ -220,36 +194,29 @@ public:
     VisualNovel() {
         setWindowTitle("Aurudinha");
         loadPrefs();
-        speech = new QTextToSpeech(this);
-        setupVoice();
-        setupUI();
-        setupScenes();
-        applyPrefs(prefs);
-        goToScene("inicio");
-        showFullScreen();
+#ifndef __EMSCRIPTEN__
+        speech = new QTextToSpeech(this); setupVoice();
+#endif
+        setupUI(); setupScenes(); applyPrefs(prefs); goToScene("inicio"); showFullScreen();
     }
 
 protected:
-    void resizeEvent(QResizeEvent *event) override {
-        applyPrefs(prefs);
-        QMainWindow::resizeEvent(event);
-    }
-
-    void keyPressEvent(QKeyEvent *event) override {
-        if (prefs.keyboard_shortcuts) {
-            int key = event->key();
-            if (key >= Qt::Key_1 && key <= Qt::Key_9) {
-                int idx = key - Qt::Key_1;
-                auto it = scenes.find(currentSceneId);
-                if (it != scenes.end() && idx < (int)it->second.choices.size()) goToScene(it->second.choices[idx].nextScene);
-            }
+    void resizeEvent(QResizeEvent *e) override { applyPrefs(prefs); QMainWindow::resizeEvent(e); }
+    void keyPressEvent(QKeyEvent *e) override {
+        if (prefs.keyboard_shortcuts && e->key() >= Qt::Key_1 && e->key() <= Qt::Key_9) {
+            int idx = e->key() - Qt::Key_1;
+            auto it = scenes.find(currentSceneId);
+            if (it != scenes.end() && idx < (int)it->second.choices.size()) goToScene(it->second.choices[idx].nextScene);
         }
-        QMainWindow::keyPressEvent(event);
+        QMainWindow::keyPressEvent(e);
     }
 
 private:
-    Prefs prefs; QTextToSpeech *speech;
-    QLabel *bgLabel, *spriteCenter, *spriteLeft, *spriteRight, *textLabel, *colorOverlay;
+    Prefs prefs;
+#ifndef __EMSCRIPTEN__
+    QTextToSpeech *speech;
+#endif
+    QLabel *bgLabel, *spriteCenter, *spriteLeft, *spriteRight, *textLabel;
     QFrame *textFrame, *choicesFrame;
     QVBoxLayout *choicesLayout;
     QPushButton *btnA11y;
@@ -257,32 +224,23 @@ private:
     std::map<QString, Scene> scenes;
 
     void setupVoice() {
+#ifndef __EMSCRIPTEN__
         QLocale locale(QLocale::Portuguese, QLocale::Brazil);
-        speech->setLocale(locale);
-        speech->setRate(-0.1);
+        speech->setLocale(locale); speech->setRate(-0.1);
+#endif
     }
 
     void setupUI() {
-        auto *central = new QWidget(this);
-        setCentralWidget(central);
+        auto *central = new QWidget(this); setCentralWidget(central);
         bgLabel = new QLabel(central);
-        bgLabel->setScaledContents(true);
-        
         spriteLeft = new QLabel(central); spriteLeft->setAlignment(Qt::AlignLeft | Qt::AlignBottom); spriteLeft->setStyleSheet("background: transparent; border: none;");
         spriteRight = new QLabel(central); spriteRight->setAlignment(Qt::AlignRight | Qt::AlignBottom); spriteRight->setStyleSheet("background: transparent; border: none;");
         spriteCenter = new QLabel(central); spriteCenter->setAlignment(Qt::AlignHCenter | Qt::AlignBottom); spriteCenter->setStyleSheet("background: transparent; border: none;");
-
-        colorOverlay = new QLabel(central);
-        colorOverlay->setAttribute(Qt::WA_TransparentForMouseEvents);
-        colorOverlay->hide();
-
         textFrame = new QFrame(central);
         textLabel = new QLabel(textFrame); textLabel->setWordWrap(true); textLabel->setAlignment(Qt::AlignLeft | Qt::AlignTop);
         choicesFrame = new QFrame(central); choicesLayout = new QVBoxLayout(choicesFrame); choicesLayout->setAlignment(Qt::AlignBottom | Qt::AlignHCenter);
-        
         choicesFrame->setStyleSheet("background: transparent; border: none;");
         textFrame->setStyleSheet("background-color: rgba(255, 255, 255, 120); border-radius: 15px; border: 2px solid rgba(255, 183, 197, 100);");
-
         btnA11y = new QPushButton("⚙ Configs", central); btnA11y->setCursor(Qt::PointingHandCursor);
         connect(btnA11y, &QPushButton::clicked, this, &VisualNovel::openA11yMenu);
     }
@@ -290,126 +248,71 @@ private:
     void setupScenes() {
         QString s = QDir::currentPath() + "/assets/sprites/";
         QString b = QDir::currentPath() + "/assets/backgrounds/";
-
-        QString a_triste = s + "aurudinhacomolhartriste_no_bg_ya4gzsbv.png";
-        QString a_chorando = s + "aurudinhachorando_no_bg_z9jgkih3.png";
-        QString a_agonia = s + "aurudinhamaonacabeça_no_bg_lwjhxt3z.png";
-        QString a_morta = s + "auridnhacomolharmorto_no_bg_myl6f8jd.png";
-        QString mae_seria = s + "maeseria_no_bg_t4bqtyzu.png";
-        QString mae_feliz = s + "maefeliz_no_bg_r2s96e1i.png";
-        QString pai_triste = s + "paitriste-removebg-preview.png";
-        QString pai_olhando = s + "paiolhandodelado-removebg-preview.png";
-        QString pai_sorrindo = s + "paisorrindo-removebg-preview.png";
-        QString prof_apreensiva = s + "professora normal ou aprenseiva_no_bg_i2annqee.png";
-
-        QString bg_quarto = b + "quartodaauruda.jpeg";
-        QString bg_sala = b + "saladacasa.jpeg";
-        QString bg_escola_frente = b + "frentedaescola.jpeg";
-        QString bg_escola_corredor = b + "correndopelaescola.jpeg";
-        QString bg_sala_aula = b + "saladeaula.jpeg";
-        QString bg_funeral = b + "cenadoveloriodaaurda.jpeg";
-
-        scenes["inicio"] = {"Aurudinha acorda em seu quarto com a mente um pouco confusa. Escuta um barulho na sala.", bg_quarto, a_triste, "", "", {{"Ir ver o que aconteceu", "ir_ver"}, {"Permanecer no quarto", "ficar_quarto"}}};
-        scenes["ir_ver"] = {"Ela se aproxima e ouve os pais no corredor...\nMãe: 'Eu não queria um filho assim...'", bg_sala, "", mae_seria, pai_triste, {{"Continuar ouvindo", "ir_ver_2"}}};
-        scenes["ir_ver_2"] = {"Pai: 'Não quero passar vergonha por ter um filho autista...'", bg_sala, "", mae_seria, pai_triste, {{"Voltar para o quarto", "choro_quarto"}}};
-        scenes["choro_quarto"] = {"Aurudinha: 'Se eu não fosse autista, meus pais não teriam vergonha de mim.'", bg_quarto, a_chorando, "", "", {{"Escola", "escola"}}};
-        scenes["ficar_quarto"] = {"Ela decide não ver nada. Fica no celular até ser chamada.", bg_quarto, a_triste, "", "", {{"Escola", "escola"}}};
-        scenes["escola"] = {"Na escola, o barulho das crianças começa a incomodar muito.", bg_escola_frente, a_triste, "", "", {{"Entrar na sala", "sala_aula"}}};
-        scenes["sala_aula"] = {"O barulho aumenta. Aurudinha começa a tremer e se sentir mal.", bg_sala_aula, a_agonia, "", "", {{"Pedir ajuda", "pedir_ajuda"}, {"Não pedir ajuda", "correr"}}};
-        scenes["pedir_ajuda"] = {"A professora percebe e tenta ajudar, mas o barulho continua.", bg_sala_aula, a_agonia, prof_apreensiva, "", {{"Ficar na sala", "casa"}, {"Sair correndo", "correr"}}};
-        scenes["correr"] = {"Ela sai correndo. No corredor, o grupinho começa a rir dela.\n'Olha essa menina doente!'", bg_escola_corredor, a_chorando, "", "", {{"Fugir da escola", "atropelamento"}, {"Ficar no chão", "casa"}}};
-        scenes["casa"] = {"De volta em casa, Aurudinha vai direto para o quarto. O pai está triste.", bg_quarto, a_triste, "", pai_triste, {{"Contar para ele", "final_bom"}, {"Não contar", "final_ruim"}}};
-        scenes["final_bom"] = {"O pai decide dar todo o apoio a Aurudinha. [ FINAL BOM ]", bg_quarto, a_chorando, "", pai_sorrindo, {{"Reiniciar", "inicio"}}};
-        scenes["final_ruim"] = {"Silêncio total na casa. O pai entra no quarto...", bg_quarto, a_morta, "", pai_triste, {{"Ver o que houve", "funeral"}}};
-        scenes["funeral"] = {"Davy se encontra perdido em pensamentos em frente ao caixão.\n'E se eu tivesse feito diferente?'", bg_funeral, "", "", pai_triste, {{"Fim", "nova_filha"}}};
-        scenes["atropelamento"] = {"Aurudinha corre sem olhar... [ FINAL TRÁGICO ]", bg_escola_frente, a_morta, "", "", {{"Anos depois", "nova_filha"}}};
-        scenes["nova_filha"] = {"A mãe vive 'feliz' com uma nova filha. [ FIM ]", bg_sala, "", mae_feliz, "", {{"Reiniciar", "inicio"}}};
+        scenes["inicio"] = {"Aurudinha acorda confusa. Escuta barulho na sala.", b+"quartodaauruda.jpeg", s+"aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", "", {{"Ir ver", "ir_ver"}, {"Ficar", "ficar_quarto"}}};
+        scenes["ir_ver"] = {"Ela ouve os pais...", b+"saladacasa.jpeg", "", s+"maeseria_no_bg_t4bqtyzu.png", s+"paitriste-removebg-preview.png", {{"Continuar", "ir_ver_2"}}};
+        scenes["ir_ver_2"] = {"Pai: 'Não quero passar vergonha...'", b+"saladacasa.jpeg", "", s+"maeseria_no_bg_t4bqtyzu.png", s+"paitriste-removebg-preview.png", {{"Voltar", "choro_quarto"}}};
+        scenes["choro_quarto"] = {"Aurudinha: 'Se eu não fosse autista...'", b+"quartodaauruda.jpeg", s+"aurudinhachorando_no_bg_z9jgkih3.png", "", "", {{"Escola", "escola"}}};
+        scenes["ficar_quarto"] = {"Ela decide não ver nada.", b+"quartodaauruda.jpeg", s+"aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", "", {{"Escola", "escola"}}};
+        scenes["escola"] = {"Na escola, o barulho incomoda.", b+"frentedaescola.jpeg", s+"aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", "", {{"Entrar", "sala_aula"}}};
+        scenes["sala_aula"] = {"O barulho aumenta. Aurudinha treme.", b+"saladeaula.jpeg", s+"aurudinhamaonacabeça_no_bg_lwjhxt3z.png", "", "", {{"Ajuda", "pedir_ajuda"}, {"Correr", "correr"}}};
+        scenes["pedir_ajuda"] = {"A professora percebe.", b+"saladeaula2.jpeg", s+"aurudinhamaonacabeça_no_bg_lwjhxt3z.png", s+"professora normal ou aprenseiva_no_bg_i2annqee.png", "", {{"Ficar", "casa"}, {"Sair", "correr"}}};
+        scenes["correr"] = {"'Olha a doente!'", b+"correndopelaescola.jpeg", s+"aurudinhachorando_no_bg_z9jgkih3.png", "", "", {{"Fugir", "atropelamento"}, {"Ficar", "casa"}}};
+        scenes["casa"] = {"Em casa, o pai está preocupado.", b+"quartodaauruda.jpeg", s+"aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", s+"paiolhandodelado-removebg-preview.png", {{"Contar", "final_bom"}, {"Não", "final_ruim"}}};
+        scenes["final_bom"] = {"[ FINAL BOM ]", b+"quartodaauruda.jpeg", s+"aurudinhachorando_no_bg_z9jgkih3.png", "", s+"paisorrindo-removebg-preview.png", {{"Reiniciar", "inicio"}}};
+        scenes["final_ruim"] = {"Silêncio total. [ FINAL RUIM ]", b+"quartodaauruda.jpeg", s+"auridnhacomolharmorto_no_bg_myl6f8jd.png", "", s+"paitriste-removebg-preview.png", {{"Fim", "inicio"}}};
+        scenes["atropelamento"] = {"[ FINAL TRÁGICO ]", b+"frentedaescola.jpeg", s+"auridnhacomolharmorto_no_bg_myl6f8jd.png", "", "", {{"Anos depois", "nova_filha"}}};
+        scenes["nova_filha"] = {"Egosinha vive 'feliz'. [ FIM ]", b+"saladacasa.jpeg", "", s+"maefeliz_no_bg_r2s96e1i.png", "", {{"Reiniciar", "inicio"}}};
     }
 
     void goToScene(QString id) {
-        speech->stop(); currentSceneId = id; Scene &s = scenes[id];
-        textLabel->setText(s.text);
+#ifndef __EMSCRIPTEN__
+        speech->stop();
+#endif
+        currentSceneId = id; Scene &s = scenes[id]; textLabel->setText(s.text);
+#ifndef __EMSCRIPTEN__
         if (prefs.text_to_speech) speech->say(s.text);
+#endif
         updateSprites();
-        
         QLayoutItem *item; while ((item = choicesLayout->takeAt(0)) != nullptr) { if (item->widget()) delete item->widget(); delete item; }
         for (const auto &c : s.choices) {
-            auto *btn = new QPushButton(c.text); btn->setFixedWidth(width() * 0.4); btn->setMinimumHeight(55);
-            QString btnStyle;
-            if (prefs.high_contrast) {
-                btnStyle = QString("QPushButton { background-color: black; color: yellow; font: bold %1pt; border: 3px solid yellow; border-radius: 12px; }").arg(qMax(10, (int)(12 * prefs.font_scale / 100)));
-            } else {
-                btnStyle = QString("QPushButton { background-color: rgba(255, 240, 245, 200); color: #3D2B3D; font: bold %1pt; border: 2px solid rgba(201, 160, 220, 150); border-radius: 12px; padding: 10px; } QPushButton:hover { background-color: rgba(201, 160, 220, 230); color: white; }").arg(qMax(10, (int)(12 * prefs.font_scale / 100)));
-            }
-            btn->setStyleSheet(btnStyle);
-            connect(btn, &QPushButton::clicked, this, [=](){ goToScene(c.nextScene); });
-            choicesLayout->addWidget(btn);
+            auto *btn = new QPushButton(c.text); btn->setFixedWidth(width() * 0.5);
+            btn->setStyleSheet(QString("QPushButton { background-color: rgba(255, 240, 245, 180); color: %1; font: bold %2pt; border: 2px solid rgba(201, 160, 220, 150); border-radius: 12px; padding: 10px; }")
+                .arg(TEXTO_ESCURO).arg(qMax(12, (int)(14 * prefs.font_scale / 100))));
+            connect(btn, &QPushButton::clicked, this, [=](){ goToScene(c.nextScene); }); choicesLayout->addWidget(btn);
         }
     }
 
     void updateSprites() {
         if (currentSceneId.isEmpty()) return;
         Scene &s = scenes[currentSceneId];
-        
         QPixmap bg(s.background);
-        if (!bg.isNull()) bgLabel->setPixmap(bg);
-
+        if (!bg.isNull()) bgLabel->setPixmap(bg.scaled(bgLabel->size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
         auto load = [this](QLabel *l, QString p) {
             if (p.isEmpty()) { l->clear(); return; }
             QPixmap pix(p); if (!pix.isNull()) l->setPixmap(pix.scaled(l->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
         };
         load(spriteCenter, s.centerSprite); load(spriteLeft, s.leftSprite); load(spriteRight, s.rightSprite);
-        bgLabel->lower(); spriteLeft->raise(); spriteRight->raise(); spriteCenter->raise(); 
-        colorOverlay->raise(); // Filtro em cima de tudo
-        textFrame->raise(); choicesFrame->raise(); btnA11y->raise();
+        bgLabel->lower(); spriteLeft->raise(); spriteRight->raise(); spriteCenter->raise(); textFrame->raise(); choicesFrame->raise(); btnA11y->raise();
     }
 
-    void openA11yMenu() { speech->stop(); AccessibilityMenu menu(this, prefs, [=](const Prefs &p){ applyPrefs(p); savePrefs(); }); if (menu.exec() == QDialog::Accepted) goToScene(currentSceneId); }
+    void openA11yMenu() { 
+#ifndef __EMSCRIPTEN__
+        speech->stop(); 
+#endif
+        AccessibilityMenu menu(this, prefs, [=](const Prefs &p){ applyPrefs(p); savePrefs(); }); 
+        if (menu.exec() == QDialog::Accepted) goToScene(currentSceneId); 
+    }
 
     void applyPrefs(const Prefs &p) {
-        prefs = p; int w = width(), h = height();
-        bgLabel->setGeometry(0, 0, w, h);
-        colorOverlay->setGeometry(0, 0, w, h);
-        
-        int sH = h * 0.8;
-        int sY = h - sH;
-        spriteLeft->setGeometry(0, sY, w/2.5, sH);
-        spriteRight->setGeometry(w - (w/2.5), sY, w/2.5, sH);
-        spriteCenter->setGeometry(0, sY, w, sH);
-        
-        struct Palette { QString bg, panel, accent, text, overlay; };
-        std::map<QString, Palette> pals = {
-            {"none", {ROSA, BRANCO, LILAS, TEXTO_ESCURO, "transparent"}}, 
-            {"deuteranopia", {"#005b96", "#b3cde0", "#ffc100", "#000000", "rgba(0, 100, 255, 40)"}}, 
-            {"protanopia", {"#005b96", "#b3cde0", "#ffc100", "#000000", "rgba(255, 100, 0, 40)"}}, 
-            {"tritanopia", {"#c81d25", "#fbc4ab", "#0081a7", "#000000", "rgba(0, 255, 255, 40)"}}
-        };
+        prefs = p; int w = width(), h = height(); bgLabel->setGeometry(0, 0, w, h);
+        spriteLeft->setGeometry(0, 0, w/2, h); spriteRight->setGeometry(w/2, 0, w/2, h); spriteCenter->setGeometry(0, 0, w, h);
+        struct Palette { QString bg, panel, accent, text; };
+        std::map<QString, Palette> pals = {{"none", {ROSA, BRANCO, LILAS, TEXTO_ESCURO}}, {"deuteranopia", {"#005b96", "#b3cde0", "#ffc100", "#000000"}}, {"protanopia", {"#005b96", "#b3cde0", "#ffc100", "#000000"}}, {"tritanopia", {"#c81d25", "#fbc4ab", "#0081a7", "#000000"}}};
         auto pal = pals[prefs.colorblind];
-        
-        if (pal.overlay != "transparent") {
-            colorOverlay->setStyleSheet(QString("background-color: %1;").arg(pal.overlay));
-            colorOverlay->show();
-        } else {
-            colorOverlay->hide();
-        }
-        
-        if (prefs.high_contrast) {
-            centralWidget()->setStyleSheet(QString("background-color: black;"));
-            textFrame->setStyleSheet(QString("background-color: rgba(0, 0, 0, 230); border: 4px solid yellow; border-radius: 15px;"));
-            textLabel->setStyleSheet(QString("color: white; font: bold %1pt; background: transparent;").arg((int)(20 * prefs.font_scale/100)));
-        } else {
-            centralWidget()->setStyleSheet(QString("background-color: %1;").arg(pal.bg));
-            textFrame->setStyleSheet(QString("background-color: rgba(255, 255, 255, 150); border: 3px solid %1; border-radius: 15px;").arg(pal.accent));
-            textLabel->setStyleSheet(QString("color: %1; font: bold %2pt; background: transparent;").arg(pal.text).arg((int)(20 * prefs.font_scale/100)));
-        }
-
-        if (prefs.reading_mode) { textFrame->setGeometry(w*0.2, h*0.2, w*0.6, h*0.6); }
-        else { textFrame->setGeometry(w*0.1, 40, w*0.8, h*0.25); }
-        
-        textLabel->setGeometry(25, 25, textFrame->width()-50, textFrame->height()-50);
-        choicesFrame->setGeometry(0, h*0.6, w, h*0.35);
-        btnA11y->setGeometry(w - 180, 20, 160, 45);
-        updateSprites();
+        if (prefs.high_contrast) { centralWidget()->setStyleSheet(QString("background-color: %1;").arg(HC_BG)); textFrame->setStyleSheet(QString("background-color: rgba(26, 26, 26, 200); border: 4px solid %1; border-radius: 15px;").arg(HC_BORDER)); textLabel->setStyleSheet(QString("color: %1; font: bold %2pt; padding: 15px; background: transparent;").arg(HC_TEXT).arg((int)(20 * prefs.font_scale/100))); }
+        else { centralWidget()->setStyleSheet(QString("background-color: %1;").arg(pal.bg)); textFrame->setStyleSheet(QString("background-color: rgba(255, 255, 255, 120); border: 3px solid %1; border-radius: 15px;").arg(pal.accent)); textLabel->setStyleSheet(QString("color: %1; font: bold %2pt; padding: 15px; background: transparent;").arg(pal.text).arg((int)(20 * prefs.font_scale/100))); }
+        if (prefs.reading_mode) textFrame->setGeometry(w*0.2, h*0.3, w*0.6, h*0.5); else textFrame->setGeometry(w*0.1, 40, w*0.8, h*0.25);
+        textLabel->setGeometry(20, 20, textFrame->width()-40, textFrame->height()-40); choicesFrame->setGeometry(0, h*0.6, w, h*0.35); btnA11y->setGeometry(w - 180, 20, 160, 45); updateSprites();
     }
     void loadPrefs() { QFile f(QDir::currentPath() + "/a11y_prefs.json"); if (f.open(QIODevice::ReadOnly)) prefs = Prefs::fromJson(QJsonDocument::fromJson(f.readAll()).object()); }
     void savePrefs() { QFile f(QDir::currentPath() + "/a11y_prefs.json"); if (f.open(QIODevice::WriteOnly)) f.write(QJsonDocument(prefs.toJson()).toJson()); }
