@@ -20,7 +20,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 --outputdir C:\Qt -m qttexttospeech
+          python -m aqt install-qt windows desktop 6.7.3 win64_msvc2019_64 --outputdir C:\Qt -m qtspeech
           "C:\Qt\6.7.3\msvc2019_64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           "Qt6_DIR=C:\Qt\6.7.3\msvc2019_64\lib\cmake\Qt6" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
