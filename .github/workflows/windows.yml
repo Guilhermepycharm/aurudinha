@@ -1,87 +1,22 @@
 name: Build Windows
-
-on:
-  push:
-    branches: [main, master]
-  pull_request:
-  workflow_dispatch:
-
+on: [push]
 jobs:
-  windows:
-    name: Windows MinGW Qt build
+  build:
     runs-on: windows-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup MSYS2
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: true
-          install: >-
-            mingw-w64-x86_64-toolchain
-            mingw-w64-x86_64-cmake
-            mingw-w64-x86_64-ninja
-            mingw-w64-x86_64-qt6-base
-            mingw-w64-x86_64-qt6-speech
-            mingw-w64-x86_64-qt6-tools
-            zip
-
-      - name: Configure CMake
-        shell: msys2 {0}
-        run: |
-          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-
+      - uses: actions/checkout@v4
       - name: Build
-        shell: msys2 {0}
+        shell: pwsh
         run: |
-          cmake --build build --parallel
-
-      - name: Deploy Windows package
-        shell: msys2 {0}
-        run: |
-          rm -rf dist aurudinha-windows.zip
-          mkdir -p dist
-
-          cp build/aurudinha_game.exe dist/
-          windeployqt --release --compiler-runtime --dir dist dist/aurudinha_game.exe
-
-          for dll in \
-            libgcc_s_seh-1.dll \
-            libstdc++-6.dll \
-            libwinpthread-1.dll \
-            libssp-0.dll \
-            zlib1.dll; do
-            if [ -f "/mingw64/bin/$dll" ]; then
-              cp "/mingw64/bin/$dll" dist/
-            fi
-          done
-
-          if [ -d assets ]; then
-            cp -r assets dist/assets
-          fi
-
-          cat > dist/LEIA-ME.txt <<'EOF'
-Para jogar no Windows:
-1. Extraia o ZIP inteiro.
-2. Não mova apenas o .exe para fora da pasta.
-3. Execute aurudinha_game.exe dentro desta pasta.
-
-Se aparecer erro de DLL, apague a pasta antiga e extraia o ZIP novamente.
-EOF
-
-          find dist -maxdepth 2 -type f | sort
-          powershell.exe -NoProfile -Command "Compress-Archive -Path dist\\* -DestinationPath aurudinha-windows.zip -Force"
-
-      - name: Upload Windows folder
-        uses: actions/upload-artifact@v4
+          choco install qt6 ninja -y
+          mkdir build
+          cd build
+          cmake -G "Ninja" .. -DCMAKE_PREFIX_PATH="C:\Qt\6.5.3\mingw_64"
+          cmake --build .
+          & "C:\Qt\6.5.3\mingw_64\bin\windeployqt.exe" --dir dist aurudinha_game.exe
+          Copy-Item ../aurudinha_game.exe -Destination dist\
+          if (Test-Path "../assets") { Copy-Item -Recurse "../assets" -Destination "dist\assets" }
+      - uses: actions/upload-artifact@v4
         with:
-          name: aurudinha-windows-folder
-          path: dist
-
-      - name: Upload Windows ZIP
-        uses: actions/upload-artifact@v4
-        with:
-          name: aurudinha-windows-zip
-          path: aurudinha-windows.zip
+          name: Aurudinha-Build
+          path: build/dist/
