@@ -2,7 +2,7 @@ name: Build Windows
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
   workflow_dispatch:
 
@@ -15,27 +15,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install MSYS2 and Qt
-        shell: pwsh
-        run: |
-          choco install msys2 --no-progress -y
-          C:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -Syuu"
-          C:\tools\msys64\usr\bin\bash.exe -lc "pacman --noconfirm -S --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-ninja mingw-w64-x86_64-qt6-base mingw-w64-x86_64-qt6-speech"
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-qt6-base
+            mingw-w64-x86_64-qt6-speech
+            mingw-w64-x86_64-qt6-tools
 
       - name: Configure CMake
-        shell: pwsh
+        shell: msys2 {0}
         run: |
-          C:\tools\msys64\usr\bin\bash.exe -lc "cd '$env:GITHUB_WORKSPACE' && export PATH=/mingw64/bin:\$PATH && cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release"
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 
       - name: Build
-        shell: pwsh
+        shell: msys2 {0}
         run: |
-          C:\tools\msys64\usr\bin\bash.exe -lc "cd '$env:GITHUB_WORKSPACE' && export PATH=/mingw64/bin:\$PATH && cmake --build build --config Release"
+          cmake --build build --parallel
 
       - name: Deploy Qt runtime
-        shell: pwsh
+        shell: msys2 {0}
         run: |
-          C:\tools\msys64\usr\bin\bash.exe -lc "cd '$env:GITHUB_WORKSPACE' && export PATH=/mingw64/bin:\$PATH && mkdir -p dist && cp build/aurudinha_game.exe dist/ && windeployqt --release --dir dist dist/aurudinha_game.exe && if [ -d assets ]; then cp -r assets dist/assets; fi"
+          mkdir -p dist
+          cp build/aurudinha_game.exe dist/
+          windeployqt --release --dir dist dist/aurudinha_game.exe
+          if [ -d assets ]; then cp -r assets dist/assets; fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
