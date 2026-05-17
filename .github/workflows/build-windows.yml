@@ -63,7 +63,7 @@ jobs:
       - name: Package ZIP
         shell: pwsh
         run: |
-          Compress-Archive -Path deploy/* -DestinationPath aurudinha-windows.zip -Force
+          Compress-Archive -Path ${{ github.workspace }}\deploy\* -DestinationPath ${{ github.workspace }}\aurudinha-windows.zip -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
