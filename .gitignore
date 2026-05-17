@@ -1,27 +1,29 @@
 # Binários e build
 vn_app
 vn_app.exe
-/aurudinha_game
-/aurudinha_game_autogen/
-/build*/
-/CMakeFiles/
-/CMakeCache.txt
-/Makefile
-/cmake_install.cmake
-/.qt/
+aurudinha_game
+aurudinha_game.exe
+aurudinha_game_autogen/
+build/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+.qt/
 *.o
 *.a
 *.so
 
-# Configurações locais
-a11y_prefs.json
-.vscode/
+# Configurações locais (dentro de config/)
+config/a11y_prefs.json
+config/.vscode/
 .idea/
 
 # Sistema/temp
 .DS_Store
 *.tmp
+Background_Removed_*/
 
 # Arquivos gerados/pesados
-*.zip
-Screenshot*.png
+dist/*.zip
+docs/screenshots/
