@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QCoreApplication>
 #include <QMainWindow>
 #include <QLabel>
 #include <QPushButton>
@@ -314,8 +315,8 @@ private:
         if (prefs.reading_mode) textFrame->setGeometry(w*0.2, h*0.3, w*0.6, h*0.5); else textFrame->setGeometry(w*0.1, 40, w*0.8, h*0.25);
         textLabel->setGeometry(20, 20, textFrame->width()-40, textFrame->height()-40); choicesFrame->setGeometry(0, h*0.6, w, h*0.35); btnA11y->setGeometry(w - 180, 20, 160, 45); updateSprites();
     }
-    void loadPrefs() { QFile f(QDir::currentPath() + "/config/a11y_prefs.json"); if (f.open(QIODevice::ReadOnly)) prefs = Prefs::fromJson(QJsonDocument::fromJson(f.readAll()).object()); }
-    void savePrefs() { QFile f(QDir::currentPath() + "/config/a11y_prefs.json"); if (f.open(QIODevice::WriteOnly)) f.write(QJsonDocument(prefs.toJson()).toJson()); }
+    void loadPrefs() { QFile f(QCoreApplication::applicationDirPath() + "/config/a11y_prefs.json"); if (f.open(QIODevice::ReadOnly)) prefs = Prefs::fromJson(QJsonDocument::fromJson(f.readAll()).object()); }
+    void savePrefs() { QFile f(QCoreApplication::applicationDirPath() + "/config/a11y_prefs.json"); if (f.open(QIODevice::WriteOnly)) f.write(QJsonDocument(prefs.toJson()).toJson()); }
 };
 
 int main(int argc, char *argv[]) {
