@@ -55,18 +55,21 @@ jobs:
           cp -r assets deploy/
           cp -r config deploy/
 
+          # windeployqt fails in MSYS2 UCRT64 (missing catalogs.json, DirectX DLLs).
+          # Use --skip-library-deploy and resolve DLLs manually via ntldd below.
           windeployqt \
             --release \
             --no-translations \
             --no-opengl-sw \
-            deploy/aurudinha_game.exe
+            --skip-library-deploy \
+            deploy/aurudinha_game.exe || true
 
-          # Copy MinGW runtime DLLs (--compiler-runtime doesn't work in MSYS2 UCRT64)
+          # Copy MinGW runtime DLLs
           cp /ucrt64/bin/libgcc_s_seh-1.dll deploy/
           cp /ucrt64/bin/libstdc++-6.dll deploy/
           cp /ucrt64/bin/libwinpthread-1.dll deploy/
 
-          # Auto-detect and copy all remaining DLL dependencies
+          # Auto-detect and copy all remaining DLL dependencies via ntldd
           find deploy/ \( -name '*.dll' -o -name '*.exe' \) | while read f; do
             ntldd -R "$f" 2>/dev/null \
               | grep -oP '/ucrt64/bin/\K\S+' \
