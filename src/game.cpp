@@ -249,20 +249,20 @@ private:
     void setupScenes() {
         QString s = QCoreApplication::applicationDirPath() + "/assets/sprites/";
         QString b = QCoreApplication::applicationDirPath() + "/assets/backgrounds/";
-        scenes["inicio"] = {"Aurudinha acorda confusa. Escuta barulho na sala.", b+"quartodaauruda.jpeg", s+"aurudinha/aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", "", {{"Ir ver", "ir_ver"}, {"Ficar", "ficar_quarto"}}};
-        scenes["ir_ver"] = {"Ela ouve os pais...", b+"saladacasa.jpeg", "", s+"mae/maeseria_no_bg_t4bqtyzu.png", s+"pai/paitriste-removebg-preview.png", {{"Continuar", "ir_ver_2"}}};
-        scenes["ir_ver_2"] = {"Pai: 'Não quero passar vergonha...'", b+"saladacasa.jpeg", "", s+"mae/maeseria_no_bg_t4bqtyzu.png", s+"pai/paitriste-removebg-preview.png", {{"Voltar", "choro_quarto"}}};
-        scenes["choro_quarto"] = {"Aurudinha: 'Se eu não fosse autista...'", b+"quartodaauruda.jpeg", s+"aurudinha/aurudinhachorando_no_bg_z9jgkih3.png", "", "", {{"Escola", "escola"}}};
-        scenes["ficar_quarto"] = {"Ela decide não ver nada.", b+"quartodaauruda.jpeg", s+"aurudinha/aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", "", {{"Escola", "escola"}}};
-        scenes["escola"] = {"Na escola, o barulho incomoda.", b+"frentedaescola.jpeg", s+"aurudinha/aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", "", {{"Entrar", "sala_aula"}}};
-        scenes["sala_aula"] = {"O barulho aumenta. Aurudinha treme.", b+"saladeaula.jpeg", s+"aurudinha/aurudinhamaonacabeça_no_bg_lwjhxt3z.png", "", "", {{"Ajuda", "pedir_ajuda"}, {"Correr", "correr"}}};
-        scenes["pedir_ajuda"] = {"A professora percebe.", b+"saladeaula2.jpeg", s+"aurudinha/aurudinhamaonacabeça_no_bg_lwjhxt3z.png", s+"professora/professora normal ou aprenseiva_no_bg_i2annqee.png", "", {{"Ficar", "casa"}, {"Sair", "correr"}}};
-        scenes["correr"] = {"'Olha a doente!'", b+"correndopelaescola.jpeg", s+"aurudinha/aurudinhachorando_no_bg_z9jgkih3.png", "", "", {{"Fugir", "atropelamento"}, {"Ficar", "casa"}}};
-        scenes["casa"] = {"Em casa, o pai está preocupado.", b+"quartodaauruda.jpeg", s+"aurudinha/aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", s+"pai/paiolhandodelado-removebg-preview.png", {{"Contar", "final_bom"}, {"Não", "final_ruim"}}};
-        scenes["final_bom"] = {"[ FINAL BOM ]", b+"quartodaauruda.jpeg", s+"aurudinha/aurudinhachorando_no_bg_z9jgkih3.png", "", s+"pai/paisorrindo-removebg-preview.png", {{"Reiniciar", "inicio"}}};
-        scenes["final_ruim"] = {"Silêncio total. [ FINAL RUIM ]", b+"quartodaauruda.jpeg", s+"aurudinha/auridnhacomolharmorto_no_bg_myl6f8jd.png", "", s+"pai/paitriste-removebg-preview.png", {{"Fim", "inicio"}}};
-        scenes["atropelamento"] = {"[ FINAL TRÁGICO ]", b+"frentedaescola.jpeg", s+"aurudinha/auridnhacomolharmorto_no_bg_myl6f8jd.png", "", "", {{"Anos depois", "nova_filha"}}};
-        scenes["nova_filha"] = {"Egosinha vive 'feliz'. [ FIM ]", b+"saladacasa.jpeg", "", s+"mae/maefeliz_no_bg_r2s96e1i.png", "", {{"Reiniciar", "inicio"}}};
+        scenes["inicio"] = {"Aurudinha acorda confusa. Escuta barulho na sala.", b+"quartodaauruda.png", s+"aurudinha/aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", "", {{"Ir ver", "ir_ver"}, {"Ficar", "ficar_quarto"}}};
+        scenes["ir_ver"] = {"Ela ouve os pais...", b+"saladacasa.png", "", s+"mae/maeseria_no_bg_t4bqtyzu.png", s+"pai/paitriste-removebg-preview.png", {{"Continuar", "ir_ver_2"}}};
+        scenes["ir_ver_2"] = {"Pai: 'Não quero passar vergonha...'", b+"saladacasa.png", "", s+"mae/maeseria_no_bg_t4bqtyzu.png", s+"pai/paitriste-removebg-preview.png", {{"Voltar", "choro_quarto"}}};
+        scenes["choro_quarto"] = {"Aurudinha: 'Se eu não fosse autista...'", b+"quartodaauruda.png", s+"aurudinha/aurudinhachorando_no_bg_z9jgkih3.png", "", "", {{"Escola", "escola"}}};
+        scenes["ficar_quarto"] = {"Ela decide não ver nada.", b+"quartodaauruda.png", s+"aurudinha/aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", "", {{"Escola", "escola"}}};
+        scenes["escola"] = {"Na escola, o barulho incomoda.", b+"frentedaescola.png", s+"aurudinha/aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", "", {{"Entrar", "sala_aula"}}};
+        scenes["sala_aula"] = {"O barulho aumenta. Aurudinha treme.", b+"saladeaula.png", s+"aurudinha/aurudinhamaonacabeça_no_bg_lwjhxt3z.png", "", "", {{"Ajuda", "pedir_ajuda"}, {"Correr", "correr"}}};
+        scenes["pedir_ajuda"] = {"A professora percebe.", b+"saladeaula2.png", s+"aurudinha/aurudinhamaonacabeça_no_bg_lwjhxt3z.png", s+"professora/professora normal ou aprenseiva_no_bg_i2annqee.png", "", {{"Ficar", "casa"}, {"Sair", "correr"}}};
+        scenes["correr"] = {"'Olha a doente!'", b+"correndopelaescola.png", s+"aurudinha/aurudinhachorando_no_bg_z9jgkih3.png", "", "", {{"Fugir", "atropelamento"}, {"Ficar", "casa"}}};
+        scenes["casa"] = {"Em casa, o pai está preocupado.", b+"quartodaauruda.png", s+"aurudinha/aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", s+"pai/paiolhandodelado-removebg-preview.png", {{"Contar", "final_bom"}, {"Não", "final_ruim"}}};
+        scenes["final_bom"] = {"[ FINAL BOM ]", b+"quartodaauruda.png", s+"aurudinha/aurudinhachorando_no_bg_z9jgkih3.png", "", s+"pai/paisorrindo-removebg-preview.png", {{"Reiniciar", "inicio"}}};
+        scenes["final_ruim"] = {"Silêncio total. [ FINAL RUIM ]", b+"quartodaauruda.png", s+"aurudinha/auridnhacomolharmorto_no_bg_myl6f8jd.png", "", s+"pai/paitriste-removebg-preview.png", {{"Fim", "inicio"}}};
+        scenes["atropelamento"] = {"[ FINAL TRÁGICO ]", b+"frentedaescola.png", s+"aurudinha/auridnhacomolharmorto_no_bg_myl6f8jd.png", "", "", {{"Anos depois", "nova_filha"}}};
+        scenes["nova_filha"] = {"Egosinha vive 'feliz'. [ FIM ]", b+"saladacasa.png", "", s+"mae/maefeliz_no_bg_r2s96e1i.png", "", {{"Reiniciar", "inicio"}}};
     }
 
     void goToScene(QString id) {
