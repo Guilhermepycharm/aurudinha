@@ -68,6 +68,12 @@ jobs:
           cp /ucrt64/bin/libwinpthread-1.dll deploy/ 2>/dev/null
           cp /ucrt64/bin/D3Dcompiler_47.dll deploy/ 2>/dev/null
 
+          # Copy Qt plugins (image formats, platform, multimedia)
+          for plugin_dir in imageformats platforms multimedia; do
+            mkdir -p "deploy/$plugin_dir"
+            find /ucrt64 -path "*/plugins/$plugin_dir/*.dll" -exec cp -n {} "deploy/$plugin_dir/" \; 2>/dev/null
+          done
+
           # Copy Qt indirect dependency DLLs (not caught by windeployqt)
           for dll in libb2-1.dll libdouble-conversion.dll libicuin78.dll libicuuc78.dll \
                     libicudt78.dll libpcre2-16-0.dll zlib1.dll libzstd.dll libfreetype-6.dll \
