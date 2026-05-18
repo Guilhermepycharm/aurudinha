@@ -36,6 +36,7 @@ jobs:
             mingw-w64-ucrt-x86_64-qt6-multimedia
             mingw-w64-ucrt-x86_64-qt6-speech
             mingw-w64-ucrt-x86_64-pkg-config
+            mingw-w64-ucrt-x86_64-ntldd
 
       - name: Configure CMake
         run: |
@@ -66,7 +67,6 @@ jobs:
           cp /ucrt64/bin/libwinpthread-1.dll deploy/
 
           # Auto-detect and copy all remaining DLL dependencies
-          pacman -S --noconfirm mingw-w64-ucrt-x86_64-ntldd
           find deploy/ \( -name '*.dll' -o -name '*.exe' \) | while read f; do
             ntldd -R "$f" 2>/dev/null \
               | grep -oP '/ucrt64/bin/\K\S+' \
