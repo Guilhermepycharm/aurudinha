@@ -53,31 +53,26 @@ jobs:
           cp build/aurudinha_game.exe deploy/
           cp -r assets deploy/
           cp -r config deploy/
+
           windeployqt \
             --release \
             --no-translations \
             --no-opengl-sw \
             deploy/aurudinha_game.exe
-          # Copy all runtime DLLs from /ucrt64/bin that the exe+Qt DLLs need
-          # First pass: copy known MinGW + third-party runtime DLLs
-          cp -n /ucrt64/bin/libgcc_s_seh-1.dll deploy/ 2>/dev/null
-          cp -n /ucrt64/bin/libstdc++-6.dll deploy/ 2>/dev/null
-          cp -n /ucrt64/bin/libwinpthread-1.dll deploy/ 2>/dev/null
-          # Second pass: use ntldd to find remaining dependencies
-          pacman -S --noconfirm mingw-w64-ucrt-x86_64-ntldd 2>/dev/null
-          ntldd -R deploy/aurudinha_game.exe 2>/dev/null \
-            | grep -oP '/ucrt64/bin/\K\S+' \
-            | sort -u \
-            | while read dll; do
-                [ -f "/ucrt64/bin/$dll" ] && cp -n "/ucrt64/bin/$dll" deploy/
-              done
-          # Also check all deployed DLLs for their dependencies
-          for dll in deploy/*.dll; do
-            ntldd -R "$dll" 2>/dev/null \
+
+          # Copy MinGW runtime DLLs (windeployqt --compiler-runtime misses these in MSYS2)
+          cp /ucrt64/bin/libgcc_s_seh-1.dll deploy/
+          cp /ucrt64/bin/libstdc++-6.dll deploy/
+          cp /ucrt64/bin/libwinpthread-1.dll deploy/
+
+          # Auto-detect and copy all remaining DLL dependencies
+          pacman -S --noconfirm mingw-w64-ucrt-x86_64-ntldd
+          find deploy/ -name '*.dll' -o -name '*.exe' | while read f; do
+            ntldd -R "$f" 2>/dev/null \
               | grep -oP '/ucrt64/bin/\K\S+' \
               | sort -u \
-              | while read dep; do
-                  [ -f "/ucrt64/bin/$dep" ] && cp -n "/ucrt64/bin/$dep" deploy/
+              | while read dll; do
+                  [ -f "/ucrt64/bin/$dll" ] && cp -n "/ucrt64/bin/$dll" deploy/
                 done
           done
 
