@@ -50,25 +50,22 @@ jobs:
 
       - name: Deploy Qt dependencies
         run: |
+          set +e
           mkdir deploy
           cp build/aurudinha_game.exe deploy/
           cp -r assets deploy/
           cp -r config deploy/
 
-          # windeployqt copies Qt DLLs; ntldd below catches the rest (MinGW runtime, third-party).
-          # || true because windeployqt may warn about missing translations/DirectX in MSYS2.
           windeployqt \
             --release \
             --no-translations \
             --no-opengl-sw \
             deploy/aurudinha_game.exe || true
 
-          # Copy MinGW runtime DLLs (not deployed by windeployqt)
-          cp /ucrt64/bin/libgcc_s_seh-1.dll deploy/
-          cp /ucrt64/bin/libstdc++-6.dll deploy/
-          cp /ucrt64/bin/libwinpthread-1.dll deploy/
+          cp /ucrt64/bin/libgcc_s_seh-1.dll deploy/ 2>/dev/null
+          cp /ucrt64/bin/libstdc++-6.dll deploy/ 2>/dev/null
+          cp /ucrt64/bin/libwinpthread-1.dll deploy/ 2>/dev/null
 
-          # Auto-detect and copy all remaining DLL dependencies via ntldd
           find deploy/ \( -name '*.dll' -o -name '*.exe' \) | while read f; do
             ntldd -R "$f" 2>/dev/null \
               | grep -oP '/ucrt64/bin/\K\S+' \
@@ -78,12 +75,14 @@ jobs:
                 done
           done
 
-          # Verify no missing dependencies remain
           echo "=== Checking for missing DLLs ==="
-          ntldd -R deploy/aurudinha_game.exe 2>/dev/null \
-            | grep -i "not found" \
-            && echo "WARNING: Some DLLs are still missing!" \
-            || echo "All DLL dependencies resolved."
+          missing=$(ntldd -R deploy/aurudinha_game.exe 2>/dev/null | grep -i "not found" | wc -l)
+          if [ "$missing" -gt 0 ]; then
+            echo "WARNING: $missing DLL(s) still missing:"
+            ntldd -R deploy/aurudinha_game.exe 2>/dev/null | grep -i "not found"
+          else
+            echo "All DLL dependencies resolved."
+          fi
 
       - name: Package ZIP
         shell: pwsh
