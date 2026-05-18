@@ -247,8 +247,8 @@ private:
     }
 
     void setupScenes() {
-        QString s = QDir::currentPath() + "/assets/sprites/";
-        QString b = QDir::currentPath() + "/assets/backgrounds/";
+        QString s = QCoreApplication::applicationDirPath() + "/assets/sprites/";
+        QString b = QCoreApplication::applicationDirPath() + "/assets/backgrounds/";
         scenes["inicio"] = {"Aurudinha acorda confusa. Escuta barulho na sala.", b+"quartodaauruda.jpeg", s+"aurudinha/aurudinhacomolhartriste_no_bg_ya4gzsbv.png", "", "", {{"Ir ver", "ir_ver"}, {"Ficar", "ficar_quarto"}}};
         scenes["ir_ver"] = {"Ela ouve os pais...", b+"saladacasa.jpeg", "", s+"mae/maeseria_no_bg_t4bqtyzu.png", s+"pai/paitriste-removebg-preview.png", {{"Continuar", "ir_ver_2"}}};
         scenes["ir_ver_2"] = {"Pai: 'Não quero passar vergonha...'", b+"saladacasa.jpeg", "", s+"mae/maeseria_no_bg_t4bqtyzu.png", s+"pai/paitriste-removebg-preview.png", {{"Voltar", "choro_quarto"}}};
