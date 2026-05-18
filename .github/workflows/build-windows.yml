@@ -60,14 +60,14 @@ jobs:
             --no-opengl-sw \
             deploy/aurudinha_game.exe
 
-          # Copy MinGW runtime DLLs (windeployqt --compiler-runtime misses these in MSYS2)
+          # Copy MinGW runtime DLLs (--compiler-runtime doesn't work in MSYS2 UCRT64)
           cp /ucrt64/bin/libgcc_s_seh-1.dll deploy/
           cp /ucrt64/bin/libstdc++-6.dll deploy/
           cp /ucrt64/bin/libwinpthread-1.dll deploy/
 
           # Auto-detect and copy all remaining DLL dependencies
           pacman -S --noconfirm mingw-w64-ucrt-x86_64-ntldd
-          find deploy/ -name '*.dll' -o -name '*.exe' | while read f; do
+          find deploy/ \( -name '*.dll' -o -name '*.exe' \) | while read f; do
             ntldd -R "$f" 2>/dev/null \
               | grep -oP '/ucrt64/bin/\K\S+' \
               | sort -u \
@@ -76,10 +76,17 @@ jobs:
                 done
           done
 
+          # Verify no missing dependencies remain
+          echo "=== Checking for missing DLLs ==="
+          ntldd -R deploy/aurudinha_game.exe 2>/dev/null \
+            | grep -i "not found" \
+            && echo "WARNING: Some DLLs are still missing!" \
+            || echo "All DLL dependencies resolved."
+
       - name: Package ZIP
         shell: pwsh
         run: |
-          Compress-Archive -Path ${{ github.workspace }}\deploy\* -DestinationPath ${{ github.workspace }}\aurudinha-windows.zip -Force
+          Compress-Archive -Path "${{ github.workspace }}\deploy\*" -DestinationPath "${{ github.workspace }}\aurudinha-windows.zip" -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
