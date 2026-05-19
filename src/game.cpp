@@ -24,6 +24,7 @@
 #include <QKeyEvent>
 #include <QDialog>
 #include <QPainter>
+#include <QDebug>
 #include <vector>
 #include <map>
 #include <functional>
@@ -235,6 +236,7 @@ private:
         auto *central = new QWidget(this); setCentralWidget(central);
         bgLabel = new QLabel(central);
         bgLabel->setScaledContents(true);
+        bgLabel->setStyleSheet("background: transparent;");
         spriteLeft = new QLabel(central); spriteLeft->setAlignment(Qt::AlignLeft | Qt::AlignBottom); spriteLeft->setStyleSheet("background: transparent; border: none;");
         spriteRight = new QLabel(central); spriteRight->setAlignment(Qt::AlignRight | Qt::AlignBottom); spriteRight->setStyleSheet("background: transparent; border: none;");
         spriteCenter = new QLabel(central); spriteCenter->setAlignment(Qt::AlignHCenter | Qt::AlignBottom); spriteCenter->setStyleSheet("background: transparent; border: none;");
@@ -291,6 +293,7 @@ private:
         int h = height() > 0 ? height() : 720;
         bgLabel->setGeometry(0, 0, w, h);
         QPixmap bg(s.background);
+        qDebug() << "BG path:" << s.background << "isNull:" << bg.isNull();
         if (!bg.isNull()) {
             bgLabel->setPixmap(bg.scaled(w, h, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
         }
