@@ -270,29 +270,26 @@ class ColorblindOverlay : public QWidget {
 public:
     ColorblindOverlay(QWidget *parent) : QWidget(parent) {
         setAttribute(Qt::WA_TransparentForMouseEvents);
-        setAttribute(Qt::WA_TransparentForMouseEvents);
+        setAttribute(Qt::WA_TranslucentBackground);
         hide();
     }
     void setMode(const QString &mode) {
         if (mode == "none") { hide(); return; }
         show();
-        // Cores de filtro semi-transparentes que simulam cada tipo de daltonismo
-        // Aplicados como overlay sobre tudo (backgrounds + sprites)
+        // Filtro de cor sutil (alpha baixo) que simula daltonismo sobre toda a tela
         if (mode == "deuteranopia") {
-            // Verde-vermelho: tom azulado/amarelo
-            filterColor = QColor(0, 60, 180, 40);
+            filterColor = QColor(0, 40, 120, 20);
         } else if (mode == "protanopia") {
-            // Vermelho-verde: tom azulado diferente
-            filterColor = QColor(0, 80, 160, 45);
+            filterColor = QColor(0, 60, 140, 22);
         } else if (mode == "tritanopia") {
-            // Azul-amarelo: tom rosado/alaranjado
-            filterColor = QColor(180, 60, 0, 35);
+            filterColor = QColor(160, 40, 0, 18);
         }
         update();
     }
 protected:
     void paintEvent(QPaintEvent *) override {
         QPainter p(this);
+        p.setCompositionMode(QPainter::CompositionMode_Multiply);
         p.fillRect(rect(), filterColor);
     }
 private:
