@@ -234,6 +234,7 @@ private:
     void setupUI() {
         auto *central = new QWidget(this); setCentralWidget(central);
         bgLabel = new QLabel(central);
+        bgLabel->setScaledContents(true);
         spriteLeft = new QLabel(central); spriteLeft->setAlignment(Qt::AlignLeft | Qt::AlignBottom); spriteLeft->setStyleSheet("background: transparent; border: none;");
         spriteRight = new QLabel(central); spriteRight->setAlignment(Qt::AlignRight | Qt::AlignBottom); spriteRight->setStyleSheet("background: transparent; border: none;");
         spriteCenter = new QLabel(central); spriteCenter->setAlignment(Qt::AlignHCenter | Qt::AlignBottom); spriteCenter->setStyleSheet("background: transparent; border: none;");
@@ -286,8 +287,13 @@ private:
     void updateSprites() {
         if (currentSceneId.isEmpty()) return;
         Scene &s = scenes[currentSceneId];
+        int w = width() > 0 ? width() : 1280;
+        int h = height() > 0 ? height() : 720;
+        bgLabel->setGeometry(0, 0, w, h);
         QPixmap bg(s.background);
-        if (!bg.isNull()) bgLabel->setPixmap(bg.scaled(bgLabel->size(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+        if (!bg.isNull()) {
+            bgLabel->setPixmap(bg.scaled(w, h, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+        }
         auto load = [this](QLabel *l, QString p) {
             if (p.isEmpty()) { l->clear(); return; }
             QPixmap pix(p); if (!pix.isNull()) l->setPixmap(pix.scaled(l->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
