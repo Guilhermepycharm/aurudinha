@@ -1,0 +1,128 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-qt6-base
+            mingw-w64-ucrt-x86_64-qt6-tools
+            mingw-w64-ucrt-x86_64-qt6-multimedia
+            mingw-w64-ucrt-x86_64-qt6-speech
+            mingw-w64-ucrt-x86_64-pkg-config
+            mingw-w64-ucrt-x86_64-ntldd
+
+      - name: Configure CMake
+        run: |
+          cmake -B build \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH=/ucrt64/lib/cmake/Qt6
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Deploy Qt dependencies
+        run: |
+          mkdir deploy
+          cp build/aurudinha_game.exe deploy/
+          cp -r assets deploy/
+          cp -r config deploy/
+
+          # Qt6 no MSYS2 instala windeployqt6, não windeployqt
+          /ucrt64/bin/windeployqt6 \
+            --release \
+            --no-translations \
+            --no-opengl-sw \
+            deploy/aurudinha_game.exe 2>/dev/null || true
+
+          # windeployqt6 não copia o runtime MinGW
+          cp /ucrt64/bin/libgcc_s_seh-1.dll  deploy/ 2>/dev/null || true
+          cp /ucrt64/bin/libstdc++-6.dll      deploy/ 2>/dev/null || true
+          cp /ucrt64/bin/libwinpthread-1.dll  deploy/ 2>/dev/null || true
+
+          # texttospeech é necessário para Qt6::TextToSpeech
+          for plugin_dir in imageformats platforms multimedia texttospeech; do
+            mkdir -p "deploy/$plugin_dir"
+            find /ucrt64 -path "*/plugins/$plugin_dir/*.dll" \
+              -exec cp -n {} "deploy/$plugin_dir/" \; 2>/dev/null || true
+          done
+
+          # 3 passes para cobrir deps transitivas (ex: DLL que depende de outra DLL)
+          for i in 1 2 3; do
+            find deploy/ \( -name '*.dll' -o -name '*.exe' \) | while read f; do
+              ntldd -R "$f" 2>/dev/null \
+                | grep -oP '/ucrt64/bin/\S+\.dll' \
+                | sort -u \
+                | while read full_path; do
+                    cp -n "$full_path" deploy/ 2>/dev/null || true
+                  done
+            done
+          done
+
+          echo "=== Missing DLLs ==="
+          missing=$(ntldd -R deploy/aurudinha_game.exe 2>/dev/null \
+            | grep -i "not found" | wc -l)
+          if [ "$missing" -gt 0 ]; then
+            echo "WARNING: $missing DLL(s) still missing:"
+            ntldd -R deploy/aurudinha_game.exe 2>/dev/null | grep -i "not found"
+          else
+            echo "All DLL dependencies resolved."
+          fi
+
+          echo "=== DLLs in deploy ==="
+          ls -la deploy/*.dll
+
+      - name: Package ZIP
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "${{ github.workspace }}\deploy\*" `
+            -DestinationPath "${{ github.workspace }}\aurudinha-windows.zip" `
+            -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurudinha-windows
+          path: aurudinha-windows.zip
+          retention-days: 30
+
+      - name: Create Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Release ${{ github.run_number }}
+          files: aurudinha-windows.zip
+          draft: false
+          prerelease: false
+          make_latest: true
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
